@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: AuthLayout) {
                 </Link>
             </header>
 
-            <div className='flex flex-col items-center justify-center mt-36'>
+            <div className='flex flex-col items-center justify-center mt-16'>
                 {children}
             </div>
 

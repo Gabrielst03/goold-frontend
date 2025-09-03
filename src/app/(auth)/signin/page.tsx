@@ -17,6 +17,7 @@ type signIn = z.infer<typeof signInSchema>
 
 export default function SignIn() {
 
+
     const { handleSubmit, register, watch } = useForm<signIn>({
         resolver: zodResolver(signInSchema)
     })
@@ -46,13 +47,13 @@ export default function SignIn() {
 
 
     const handleSignIn = useCallback(async (data: signIn) => {
-        alert(JSON.stringify(data))
+        alert(data)
     }, [])
 
     return (
         <AuthLayout>
             <div className='flex flex-col items-center gap-6'>
-                <p className='text-3xl'>Entre em sua conta</p>
+                <p className='text-2xl font-bold'>Entre em sua conta</p>
 
                 <div className='w-[448px] p-8 border rounded'>
                     <div className='flex flex-col gap-4'>
