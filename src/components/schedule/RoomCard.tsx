@@ -1,9 +1,18 @@
 'use client'
-import { Room } from "@/mocks/rooms"
 import { MapPin, Users, Wifi } from "lucide-react"
 
+interface RoomCardRoom {
+    id: string
+    name: string
+    location?: string
+    capacity?: number
+    description?: string
+    amenities?: string[]
+    available: boolean
+}
+
 interface RoomCardProps {
-    room: Room
+    room: RoomCardRoom
     selected?: boolean
     onClick?: () => void
 }
@@ -19,24 +28,28 @@ export function RoomCard({ room, selected, onClick }: RoomCardProps) {
                 <div className="space-y-1 flex-1">
                     <h4 className="font-medium text-sm">{room.name}</h4>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            <span>{room.location}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            <span>{room.capacity} pessoas</span>
-                        </div>
+                        {room.location && (
+                            <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                <span>{room.location}</span>
+                            </div>
+                        )}
+                        {room.capacity && (
+                            <div className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>{room.capacity} pessoas</span>
+                            </div>
+                        )}
                     </div>
                     {room.description && (
                         <p className="text-xs text-muted-foreground">{room.description}</p>
                     )}
-                    {room.equipment.length > 0 && (
+                    {room.amenities && room.amenities.length > 0 && (
                         <div className="flex items-center gap-1 flex-wrap">
                             <Wifi className="w-3 h-3 text-muted-foreground" />
                             <span className="text-xs text-muted-foreground">
-                                {room.equipment.slice(0, 2).join(', ')}
-                                {room.equipment.length > 2 && ` +${room.equipment.length - 2}`}
+                                {room.amenities.slice(0, 2).join(', ')}
+                                {room.amenities.length > 2 && ` +${room.amenities.length - 2}`}
                             </span>
                         </div>
                     )}

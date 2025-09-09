@@ -10,6 +10,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [token, setToken] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [hasVerifiedProfile, setHasVerifiedProfile] = useState(false)
     const router = useRouter()
 
     const isAuthenticated = !!user && !!token
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setToken(null)
         setUser(null)
+        setHasVerifiedProfile(false)
 
         router.push('/signin')
     }, [router])
@@ -51,13 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false)
     }, [logout])
 
+    // Verificar se o token ainda é válido apenas uma vez
     useEffect(() => {
-        if (token && user) {
+        if (token && !isLoading && !hasVerifiedProfile) {
+            setHasVerifiedProfile(true)
             getProfile().catch(() => {
                 logout()
             })
         }
-    }, [token, user, getProfile, logout])
+    }, [token, isLoading, hasVerifiedProfile, getProfile, logout])
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             setToken(authToken)
             setUser(userData)
+            setHasVerifiedProfile(true) // Já temos dados válidos do login
 
             router.push('/')
         } catch (error: unknown) {

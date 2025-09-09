@@ -10,14 +10,14 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { TimePicker } from "./TimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { getAvailableSimpleRooms } from "@/mocks/simple-rooms";
+import { useAvailableRooms } from "@/hooks/useRooms";
 
 export function ScheduleHeader() {
     const [date, setDate] = useState<Date>()
     const [selectedTime, setSelectedTime] = useState<string>()
     const [selectedRoom, setSelectedRoom] = useState<string>()
 
-    const availableRooms = getAvailableSimpleRooms()
+    const { data: availableRooms = [], isLoading: isLoadingRooms } = useAvailableRooms()
 
     return (
         <header className="flex items-center justify-between border-b pb-4">
@@ -113,8 +113,8 @@ export function ScheduleHeader() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {availableRooms.map((room) => (
-                                        <SelectItem key={room.id} value={room.id}>
-                                            <span>{room.name}</span>
+                                        <SelectItem key={room.id} value={room.id.toString()}>
+                                            <span>Sala {room.number}</span>
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
