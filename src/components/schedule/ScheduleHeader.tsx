@@ -12,6 +12,7 @@ import { TimePicker } from "./TimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAvailableRooms } from "@/hooks/useRooms";
 import { useCreateSchedule } from "@/hooks/useSchedules";
+import { toast } from "react-toastify";
 
 export function ScheduleHeader() {
     const [date, setDate] = useState<Date>()
@@ -42,8 +43,17 @@ export function ScheduleHeader() {
             setSelectedTime(undefined)
             setSelectedRoom(undefined)
             setIsDialogOpen(false)
+
+            toast.success("Agendamento criado com sucesso!", {
+                position: "top-right",
+                autoClose: 3000
+            })
         } catch (error) {
             console.error('Erro ao criar agendamento:', error)
+            toast.error("Erro ao criar agendamento. Tente novamente.", {
+                position: "top-right",
+                autoClose: 4000
+            })
         }
     }
 

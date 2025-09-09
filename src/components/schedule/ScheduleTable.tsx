@@ -1,10 +1,23 @@
 'use client'
 import { X } from "lucide-react"
 import { Button } from "../ui/button"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "../ui/alert-dialog"
 import { useMySchedules, useCancelSchedule } from "@/hooks/useSchedules"
 import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
 import { dateLocale } from "@/lib/date-config"
+import { toast } from "react-toastify"
+import { ScheduleBadge } from "./ScheduleBadge"
 
 export function ScheduleTable() {
     const { user } = useAuth()
@@ -14,8 +27,17 @@ export function ScheduleTable() {
     const handleCancelSchedule = async (scheduleId: number) => {
         try {
             await cancelScheduleMutation.mutateAsync(scheduleId)
+
+            toast.success("Agendamento cancelado com sucesso!", {
+                position: "top-right",
+                autoClose: 3000
+            })
         } catch (error) {
             console.error('Erro ao cancelar agendamento:', error)
+            toast.error("Erro ao cancelar agendamento. Tente novamente.", {
+                position: "top-right",
+                autoClose: 4000
+            })
         }
     }
 
@@ -79,26 +101,38 @@ export function ScheduleTable() {
                                 </span>
                             </td>
                             <td className="px-4 py-3">
-                                <span className={`gap-1 inline-flex items-center justify-center px-6 py-1.5 text-sm font-medium rounded-full ${schedule.status === 'confirmed'
-                                    ? 'text-green-600 border border-green-300 bg-green-50'
-                                    : schedule.status === 'cancelled'
-                                        ? 'text-red-600 border border-red-300 bg-red-50'
-                                        : 'text-yellow-600 border border-yellow-300 bg-yellow-50'
-                                    }`}>
-                                    {schedule.status === 'confirmed' ? 'Confirmado' :
-                                        schedule.status === 'cancelled' ? 'Cancelado' : 'Pendente'}
-                                </span>
+                                <ScheduleBadge status={schedule.status} />
                             </td>
                             <td className="px-4 py-3">
-                                <Button
-                                    size="icon"
-                                    className="rounded-full"
-                                    onClick={() => handleCancelSchedule(schedule.id)}
-                                    disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
-                                    variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
-                                >
-                                    <X />
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            className="rounded-full"
+                                            disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
+                                            variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
+                                        >
+                                            <X />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Cancelar agendamento</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => handleCancelSchedule(schedule.id)}
+                                                className="bg-red-600 hover:bg-red-700"
+                                            >
+                                                Sim, cancelar agendamento
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </td>
                         </tr>
                     ))}

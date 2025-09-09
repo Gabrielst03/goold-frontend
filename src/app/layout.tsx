@@ -1,8 +1,10 @@
 'use client'
 import { Montserrat } from "next/font/google";
 import "./globals.css";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ToastContainer } from "react-toastify";
 import { useState } from "react";
 
 
@@ -31,6 +33,18 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             {children}
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
           </AuthProvider>
         </QueryClientProvider>
       </body>
