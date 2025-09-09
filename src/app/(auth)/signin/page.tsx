@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import AuthLayout from '@/layouts/AuthLayout'
+import { useAuth } from '@/contexts/AuthContext'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import React, { useCallback, useState } from 'react'
@@ -9,16 +10,17 @@ import { useForm } from 'react-hook-form'
 import z from 'zod'
 
 const signInSchema = z.object({
-    email: z.email('Você precisa inserir um e-mail válido.'),
+    email: z.string().email('Você precisa inserir um e-mail válido.'),
     password: z.string().min(6, 'Você precisa informar sua senha.')
 })
 
-type signIn = z.infer<typeof signInSchema>
+type SignInFormData = z.infer<typeof signInSchema>
 
 export default function SignIn() {
+    const { login, isLoading } = useAuth()
+    const [error, setError] = useState<string | null>(null)
 
-
-    const { handleSubmit, register, watch } = useForm<signIn>({
+    const { handleSubmit, register, watch, formState: { errors } } = useForm<SignInFormData>({
         resolver: zodResolver(signInSchema)
     })
 
@@ -43,12 +45,16 @@ export default function SignIn() {
         }
     }
 
-    const canSubmit = isEmailValid() && isPasswordValid()
+    const canSubmit = isEmailValid() && isPasswordValid() && !isLoading
 
-
-    const handleSignIn = useCallback(async (data: signIn) => {
-        alert(data)
-    }, [])
+    const handleSignIn = useCallback(async (data: SignInFormData) => {
+        try {
+            setError(null)
+            await login(data)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Erro ao fazer login')
+        }
+    }, [login])
 
     return (
         <AuthLayout>
@@ -56,28 +62,49 @@ export default function SignIn() {
                 <p className='text-2xl font-bold'>Entre em sua conta</p>
 
                 <div className='w-[448px] p-8 border rounded'>
-                    <div className='flex flex-col gap-4'>
+                    <form onSubmit={handleSubmit(handleSignIn)} className='flex flex-col gap-4'>
+                        {error && (
+                            <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded">
+                                {error}
+                            </div>
+                        )}
+
                         <div className='flex flex-col gap-1'>
                             <label>E-mail (Obrigatório)</label>
-                            <Input {...register('email')} placeholder='Insira seu e-mail' />
+                            <Input
+                                {...register('email')}
+                                placeholder='Insira seu e-mail'
+                                disabled={isLoading}
+                            />
+                            {errors.email && (
+                                <span className="text-red-500 text-sm">{errors.email.message}</span>
+                            )}
                         </div>
 
                         {isEmailValid() && (
                             <div className='flex flex-col gap-1'>
                                 <label>Senha de acesso (Obrigatório)</label>
-                                <Input {...register('password')} type='password' placeholder='Insira sua senha' />
+                                <Input
+                                    {...register('password')}
+                                    type='password'
+                                    placeholder='Insira sua senha'
+                                    disabled={isLoading}
+                                />
+                                {errors.password && (
+                                    <span className="text-red-500 text-sm">{errors.password.message}</span>
+                                )}
                             </div>
                         )}
 
                         <Button
-                            onClick={handleSubmit(handleSignIn)}
+                            type="submit"
                             size={"lg"}
                             className='w-full'
                             disabled={!canSubmit}
                         >
-                            Acessar Conta
+                            {isLoading ? 'Entrando...' : 'Acessar Conta'}
                         </Button>
-                    </div>
+                    </form>
 
                     <div className="flex items-center justify-between mt-6">
                         <p>Ainda não tem um cadastro?</p>

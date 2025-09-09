@@ -2,16 +2,18 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import AuthLayout from '@/layouts/AuthLayout'
+import { useAuth } from '@/contexts/AuthContext'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
 import React, { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
 import { searchCep, formatCep } from '@/utils/functions/search-cep'
 
-const signInSchema = z.object({
+const signUpSchema = z.object({
     firstName: z.string().min(2, 'Você precisa informar seu nome.'),
     lastName: z.string().min(2, 'Você precisa informar seu sobrenome.'),
-    email: z.email('Você precisa inserir um e-mail válido.'),
+    email: z.string().email('Você precisa inserir um e-mail válido.'),
     password: z.string().min(6, 'Você precisa informar sua senha.'),
     address: z.object({
         zipCode: z.string().min(8, 'CEP deve ter 8 dígitos.').max(9, 'CEP inválido.'),
@@ -24,16 +26,17 @@ const signInSchema = z.object({
     })
 })
 
-type signIn = z.infer<typeof signInSchema>
+type SignUpFormData = z.infer<typeof signUpSchema>
 
 export default function SignUp() {
-
-    const { handleSubmit, register, setValue, formState: { errors } } = useForm<signIn>({
-        resolver: zodResolver(signInSchema)
-    })
-
+    const { signup, isLoading } = useAuth()
+    const [error, setError] = useState<string | null>(null)
     const [isLoadingCep, setIsLoadingCep] = useState(false)
     const [showAddressFields, setShowAddressFields] = useState(false)
+
+    const { handleSubmit, register, setValue, formState: { errors } } = useForm<SignUpFormData>({
+        resolver: zodResolver(signUpSchema)
+    })
 
     const handleCepSearch = useCallback(async (cep: string) => {
         setIsLoadingCep(true)
@@ -78,9 +81,20 @@ export default function SignUp() {
         }
     }, [setValue, handleCepSearch, setShowAddressFields])
 
-    const handleSignIn = useCallback(async (data: signIn) => {
-        alert(JSON.stringify(data))
-    }, [])
+    const handleSignUp = useCallback(async (data: SignUpFormData) => {
+        try {
+            setError(null)
+
+            const signupData = {
+                ...data,
+                accountType: 'customer' as const
+            }
+
+            await signup(signupData)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Erro ao criar conta')
+        }
+    }, [signup])
 
     return (
         <AuthLayout>
@@ -88,28 +102,62 @@ export default function SignUp() {
                 <p className='text-2xl font-bold'>Cadastre-se</p>
 
                 <div className='w-[490px] p-8 border rounded'>
-                    <div className='flex flex-col gap-4'>
+                    <form onSubmit={handleSubmit(handleSignUp)} className='flex flex-col gap-4'>
+                        {error && (
+                            <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded">
+                                {error}
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-4">
                             <div className='flex flex-col gap-1 w-full'>
                                 <label>Nome (Obrigatório)</label>
-                                <Input {...register('firstName')} placeholder='Insira seu nome' />
+                                <Input
+                                    {...register('firstName')}
+                                    placeholder='Insira seu nome'
+                                    disabled={isLoading}
+                                />
+                                {errors.firstName && (
+                                    <span className="text-red-500 text-sm">{errors.firstName.message}</span>
+                                )}
                             </div>
 
                             <div className='flex flex-col gap-1 w-full'>
                                 <label>Sobrenome (Obrigatório)</label>
-                                <Input {...register('lastName')} placeholder='Insira seu sobrenome' />
+                                <Input
+                                    {...register('lastName')}
+                                    placeholder='Insira seu sobrenome'
+                                    disabled={isLoading}
+                                />
+                                {errors.lastName && (
+                                    <span className="text-red-500 text-sm">{errors.lastName.message}</span>
+                                )}
                             </div>
                         </div>
 
                         <div className='flex flex-col gap-1'>
                             <label>E-mail (Obrigatório)</label>
-                            <Input {...register('email')} placeholder='Insira seu e-mail' />
+                            <Input
+                                {...register('email')}
+                                placeholder='Insira seu e-mail'
+                                disabled={isLoading}
+                            />
+                            {errors.email && (
+                                <span className="text-red-500 text-sm">{errors.email.message}</span>
+                            )}
                         </div>
 
                         <div className='flex flex-col gap-1'>
                             <label>Senha de acesso (Obrigatório)</label>
-                            <Input {...register('password')} type='password' placeholder='Insira sua senha' />
+                            <Input
+                                {...register('password')}
+                                type='password'
+                                placeholder='Insira sua senha'
+                                disabled={isLoading}
+                            />
+                            {errors.password && (
+                                <span className="text-red-500 text-sm">{errors.password.message}</span>
+                            )}
                         </div>
 
                         <hr className='w-full bg-zinc-200' />
@@ -122,6 +170,7 @@ export default function SignUp() {
                                 type='text'
                                 placeholder='00000-000'
                                 maxLength={9}
+                                disabled={isLoading}
                             />
                             {isLoadingCep && (
                                 <span className="text-blue-500 text-sm">Buscando endereço...</span>
@@ -139,7 +188,7 @@ export default function SignUp() {
                                         {...register('address.street')}
                                         type='text'
                                         placeholder='Nome da rua'
-                                        disabled={isLoadingCep}
+                                        disabled={isLoadingCep || isLoading}
                                     />
                                     {errors.address?.street && (
                                         <span className="text-red-500 text-sm">{errors.address.street.message}</span>
@@ -152,6 +201,7 @@ export default function SignUp() {
                                         {...register('address.number')}
                                         type='text'
                                         placeholder='123'
+                                        disabled={isLoading}
                                     />
                                     {errors.address?.number && (
                                         <span className="text-red-500 text-sm">{errors.address.number.message}</span>
@@ -164,9 +214,9 @@ export default function SignUp() {
                                         {...register('address.complement')}
                                         type='text'
                                         placeholder='Apartamento, bloco, etc.'
+                                        disabled={isLoading}
                                     />
                                 </div>
-
 
                                 <div className='flex flex-col gap-1 w-full'>
                                     <label>Bairro</label>
@@ -180,8 +230,6 @@ export default function SignUp() {
                                         <span className="text-red-500 text-sm">{errors.address.district.message}</span>
                                     )}
                                 </div>
-
-
 
                                 <div className='flex flex-col gap-1 w-full'>
                                     <label>Cidade</label>
@@ -209,22 +257,24 @@ export default function SignUp() {
                                         <span className="text-red-500 text-sm">{errors.address.state.message}</span>
                                     )}
                                 </div>
-
-
                             </>
                         )}
 
-
                         <Button
-                            onClick={handleSubmit(handleSignIn)}
+                            type="submit"
                             size={"lg"}
                             className='w-full'
+                            disabled={isLoading}
                         >
-                            Cadastrar-se
+                            {isLoading ? 'Cadastrando...' : 'Cadastrar-se'}
                         </Button>
+                    </form>
+
+                    <div className="flex items-center justify-between mt-6">
+                        <p>Já tem uma conta?</p>
+                        <Link href={'/signin'} className='font-bold underline cursor-pointer'>Fazer login</Link>
                     </div>
                 </div>
-
             </div>
         </AuthLayout>
     )

@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SidebarFooter } from "./sidebar-footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { user } = useAuth();
 
     return (
         <aside className="flex flex-col h-screen w-64 border-r bg-[#F6F4F1]">
@@ -32,11 +34,13 @@ export function Sidebar() {
                 })}
             </nav>
 
-            <SidebarFooter accountInfo={{
-                firstName: "Gabriel",
-                lastName: "Santana",
-                accountType: "Cliente"
-            }} />
+            {user && (
+                <SidebarFooter accountInfo={{
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    accountType: user.accountType === 'customer' ? 'Cliente' : 'Administrador'
+                }} />
+            )}
         </aside>
     );
 }
