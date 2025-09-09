@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { AuthResponse, LoginRequest, SignUpRequest, User } from '@/types/auth'
 import { Room, CreateRoomRequest, UpdateRoomRequest } from '@/types/room'
+import { Schedule, CreateScheduleRequest, UpdateScheduleRequest, UpdateScheduleStatusRequest } from '@/types/schedule'
 
 export const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333',
@@ -80,5 +81,52 @@ export const roomAPI = {
 
     deleteRoom: async (id: number): Promise<void> => {
         await api.delete(`/rooms/${id}`)
+    }
+}
+
+export const scheduleAPI = {
+    getSchedules: async (): Promise<Schedule[]> => {
+        const response = await api.get('/schedules')
+        return response.data
+    },
+
+    getMySchedules: async (): Promise<Schedule[]> => {
+        const response = await api.get('/schedules/my-schedules')
+        return response.data
+    },
+
+    getUpcomingSchedules: async (): Promise<Schedule[]> => {
+        const response = await api.get('/schedules/upcoming')
+        return response.data
+    },
+
+    getScheduleById: async (id: number): Promise<Schedule> => {
+        const response = await api.get(`/schedules/${id}`)
+        return response.data
+    },
+
+    createSchedule: async (data: CreateScheduleRequest): Promise<Schedule> => {
+        const response = await api.post('/schedules', data)
+        return response.data
+    },
+
+    updateSchedule: async (id: number, data: UpdateScheduleRequest): Promise<Schedule> => {
+        const response = await api.put(`/schedules/${id}`, data)
+        return response.data
+    },
+
+    updateScheduleStatus: async (id: number, data: UpdateScheduleStatusRequest): Promise<Schedule> => {
+        const response = await api.patch(`/schedules/${id}/status`, data)
+        return response.data
+    },
+
+    cancelSchedule: async (id: number): Promise<{ message: string; schedule: Schedule }> => {
+        const response = await api.patch(`/schedules/${id}/cancel`)
+        return response.data
+    },
+
+    deleteSchedule: async (id: number): Promise<{ message: string }> => {
+        const response = await api.delete(`/schedules/${id}`)
+        return response.data
     }
 }

@@ -11,13 +11,41 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { TimePicker } from "./TimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAvailableRooms } from "@/hooks/useRooms";
+import { useCreateSchedule } from "@/hooks/useSchedules";
 
 export function ScheduleHeader() {
     const [date, setDate] = useState<Date>()
     const [selectedTime, setSelectedTime] = useState<string>()
     const [selectedRoom, setSelectedRoom] = useState<string>()
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-    const { data: availableRooms = [], isLoading: isLoadingRooms } = useAvailableRooms()
+    const { data: availableRooms = [] } = useAvailableRooms()
+    const createScheduleMutation = useCreateSchedule()
+
+    const canCreate = date && selectedTime && selectedRoom
+    const isCreating = createScheduleMutation.isPending
+
+    const handleCreateSchedule = async () => {
+        if (!canCreate) return
+
+        const scheduleDateTime = new Date(date)
+        const [hours, minutes] = selectedTime.split(':')
+        scheduleDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+
+        try {
+            await createScheduleMutation.mutateAsync({
+                scheduleDate: scheduleDateTime.toISOString(),
+                roomId: parseInt(selectedRoom)
+            })
+
+            setDate(undefined)
+            setSelectedTime(undefined)
+            setSelectedRoom(undefined)
+            setIsDialogOpen(false)
+        } catch (error) {
+            console.error('Erro ao criar agendamento:', error)
+        }
+    }
 
     return (
         <header className="flex items-center justify-between border-b pb-4">
@@ -38,7 +66,6 @@ export function ScheduleHeader() {
                                 {date ? format(date, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
                             </div>
                             <CalendarIcon />
-
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -47,8 +74,8 @@ export function ScheduleHeader() {
                 </Popover>
             </div>
 
-            <Dialog>
-                <DialogTrigger>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
                     <Button size={'lg'}>
                         Novo Agendamento
                     </Button>
@@ -74,7 +101,6 @@ export function ScheduleHeader() {
                                             {date ? format(date, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
                                         </div>
                                         <CalendarIcon />
-
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
@@ -96,7 +122,6 @@ export function ScheduleHeader() {
                                             {selectedTime ? selectedTime : <span>Selecione</span>}
                                         </div>
                                         <Clock />
-
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
@@ -120,14 +145,26 @@ export function ScheduleHeader() {
                                 </SelectContent>
                             </Select>
                         </div>
+
+                        {createScheduleMutation.isError && (
+                            <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded text-sm">
+                                Erro ao criar agendamento. Tente novamente.
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="mt-5 border-t">
-                        <Button size={'lg'} className="w-full mt-5">Confirmar Agendamento</Button>
+                        <Button
+                            size={'lg'}
+                            className="w-full mt-5"
+                            onClick={handleCreateSchedule}
+                            disabled={!canCreate || isCreating}
+                        >
+                            {isCreating ? 'Criando...' : 'Confirmar Agendamento'}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
         </header>
     )
 }
