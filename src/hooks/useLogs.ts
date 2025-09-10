@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { logsAPI } from '@/services/api'
 import { CreateLogRequest } from '@/types/logs'
-import { useAuth } from '@/contexts/AuthContext'
 
 export const logsKeys = {
     all: ['logs'] as const,
@@ -14,13 +13,9 @@ export const logsKeys = {
 }
 
 export function useLogs() {
-    const { user } = useAuth()
-    const isAdmin = user?.accountType === 'admin'
-
     return useQuery({
         queryKey: logsKeys.lists(),
         queryFn: logsAPI.getLogs,
-        enabled: isAdmin,
         staleTime: 2 * 60 * 1000,
     })
 }

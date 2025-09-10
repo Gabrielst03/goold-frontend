@@ -1,5 +1,5 @@
 'use client'
-import { useLogs } from "@/hooks/useLogs"
+import { useLogs, useMyLogs } from "@/hooks/useLogs"
 import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
 import { dateLocale } from "@/lib/date-config"
@@ -8,19 +8,18 @@ import { ModuleBadge } from "./ModuleBadge"
 
 export function LogsTable() {
     const { user } = useAuth()
-    const { data: logsData, isLoading, error } = useLogs()
+    const isAdmin = user?.accountType === 'admin'
+    
+    // Usar diferentes hooks baseado no tipo de usuário
+    const adminLogsQuery = useLogs()
+    const userLogsQuery = useMyLogs()
+    
+    // Selecionar a query apropriada
+    const { data: logsData, isLoading, error } = isAdmin ? adminLogsQuery : userLogsQuery
 
     const logs = logsData?.logs || []
-    const isAdmin = user?.accountType === 'admin'
 
-    if (!isAdmin) {
-        return (
-            <div className="mt-6 text-center text-red-500 py-8">
-                <p>Acesso negado</p>
-                <p className="text-sm">Apenas administradores podem visualizar os logs do sistema</p>
-            </div>
-        )
-    } if (isLoading) {
+    if (isLoading) {
         return (
             <div className="mt-6 flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
