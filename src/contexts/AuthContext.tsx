@@ -15,16 +15,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const isAuthenticated = !!user && !!token
 
-    const logout = useCallback(() => {
-        localStorage.removeItem('@goold:token')
-        localStorage.removeItem('@goold:user')
+    const logout = useCallback(async () => {
+        try {
+            if (token) {
+                await authAPI.logout()
+            }
+        } catch (error) {
+            console.error('Erro ao fazer logout na API:', error)
+        } finally {
+            localStorage.removeItem('@goold:token')
+            localStorage.removeItem('@goold:user')
 
-        setToken(null)
-        setUser(null)
-        setHasVerifiedProfile(false)
+            setToken(null)
+            setUser(null)
+            setHasVerifiedProfile(false)
 
-        router.push('/signin')
-    }, [router])
+            router.push('/signin')
+        }
+    }, [router, token])
 
     const getProfile = useCallback(async () => {
         try {

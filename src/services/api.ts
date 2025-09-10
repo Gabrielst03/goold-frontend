@@ -2,6 +2,7 @@ import axios from 'axios'
 import { AuthResponse, LoginRequest, SignUpRequest, User } from '@/types/auth'
 import { Room, CreateRoomRequest, UpdateRoomRequest } from '@/types/room'
 import { Schedule, CreateScheduleRequest, UpdateScheduleRequest, UpdateScheduleStatusRequest } from '@/types/schedule'
+import { Log, LogsResponse, CreateLogRequest } from '@/types/logs'
 
 export const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333',
@@ -39,6 +40,10 @@ export const authAPI = {
     signup: async (userData: SignUpRequest): Promise<User> => {
         const response = await api.post('/users', userData)
         return response.data
+    },
+
+    logout: async (): Promise<void> => {
+        await api.post('/auth/logout')
     },
 
     getProfile: async (): Promise<User> => {
@@ -127,6 +132,28 @@ export const scheduleAPI = {
 
     deleteSchedule: async (id: number): Promise<{ message: string }> => {
         const response = await api.delete(`/schedules/${id}`)
+        return response.data
+    }
+}
+
+export const logsAPI = {
+    getLogs: async (): Promise<LogsResponse> => {
+        const response = await api.get('/logs')
+        return response.data
+    },
+
+    getMyLogs: async (): Promise<LogsResponse> => {
+        const response = await api.get('/logs/my')
+        return response.data
+    },
+
+    getLogsByModule: async (module: string): Promise<LogsResponse> => {
+        const response = await api.get(`/logs/module/${module}`)
+        return response.data
+    },
+
+    createLog: async (data: CreateLogRequest): Promise<Log> => {
+        const response = await api.post('/logs', data)
         return response.data
     }
 }
