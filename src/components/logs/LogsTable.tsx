@@ -9,12 +9,10 @@ import { ModuleBadge } from "./ModuleBadge"
 export function LogsTable() {
     const { user } = useAuth()
     const isAdmin = user?.accountType === 'admin'
-    
-    // Usar diferentes hooks baseado no tipo de usuário
+
     const adminLogsQuery = useLogs()
     const userLogsQuery = useMyLogs()
-    
-    // Selecionar a query apropriada
+
     const { data: logsData, isLoading, error } = isAdmin ? adminLogsQuery : userLogsQuery
 
     const logs = logsData?.logs || []
