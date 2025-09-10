@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
 import { dateLocale } from "@/lib/date-config"
 import { LogBadge } from "./LogBadge"
+import { ModuleBadge } from "./ModuleBadge"
 
 export function LogsTable() {
     const { user } = useAuth()
@@ -71,7 +72,7 @@ export function LogsTable() {
                                 <LogBadge text={log.activityType} />
                             </td>
                             <td className="px-4 py-3">
-                                <LogBadge text={log.module} />
+                                <ModuleBadge text={log.module} />
                             </td>
                             <td className="px-4 py-3">
                                 <LogBadge text={format(new Date(log.activityDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })} />
