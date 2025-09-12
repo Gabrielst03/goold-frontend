@@ -115,6 +115,35 @@ export function ScheduleTable() {
                                 <ScheduleBadge status={schedule.status} />
                             </td>
                             <td className="px-4 py-3 flex gap-2 items-center">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            className="rounded-full"
+                                            disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
+                                            variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
+                                        >
+                                            <X />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Cancelar agendamento</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={() => handleCancelSchedule(schedule.id)}
+                                                className="bg-red-600 hover:bg-red-700"
+                                            >
+                                                Sim, cancelar agendamento
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                                 {isAdmin && schedule.status === 'pending' && (
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
@@ -152,35 +181,6 @@ export function ScheduleTable() {
                                         </AlertDialogContent>
                                     </AlertDialog>
                                 )}
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button
-                                            size="icon"
-                                            className="rounded-full"
-                                            disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
-                                            variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
-                                        >
-                                            <X />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Cancelar agendamento</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
-                                            <AlertDialogAction
-                                                onClick={() => handleCancelSchedule(schedule.id)}
-                                                className="bg-red-600 hover:bg-red-700"
-                                            >
-                                                Sim, cancelar agendamento
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
                             </td>
                         </tr>
                     ))}
