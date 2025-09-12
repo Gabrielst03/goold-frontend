@@ -137,18 +137,24 @@ export const scheduleAPI = {
 }
 
 export const logsAPI = {
-    getLogs: async (): Promise<LogsResponse> => {
-        const response = await api.get('/logs')
+    getLogs: async (page: number = 1, limit: number = 10): Promise<LogsResponse> => {
+        const response = await api.get('/logs', {
+            params: { page, limit }
+        })
         return response.data
     },
 
-    getMyLogs: async (): Promise<LogsResponse> => {
-        const response = await api.get('/logs/my')
+    getMyLogs: async (page: number = 1, limit: number = 10): Promise<LogsResponse> => {
+        const response = await api.get('/logs/my', {
+            params: { page, limit }
+        })
         return response.data
     },
 
-    getLogsByModule: async (module: string): Promise<LogsResponse> => {
-        const response = await api.get(`/logs/module/${module}`)
+    getLogsByModule: async (module: string, page: number = 1, limit: number = 10): Promise<LogsResponse> => {
+        const response = await api.get(`/logs/module/${module}`, {
+            params: { page, limit }
+        })
         return response.data
     },
 

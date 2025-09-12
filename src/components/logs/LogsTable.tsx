@@ -5,17 +5,29 @@ import { format } from "date-fns"
 import { dateLocale } from "@/lib/date-config"
 import { LogBadge } from "./LogBadge"
 import { ModuleBadge } from "./ModuleBadge"
+import { Pagination } from "@/components/ui/pagination"
+import { useState } from "react"
 
 export function LogsTable() {
     const { user } = useAuth()
     const isAdmin = user?.accountType === 'admin'
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 10
 
-    const adminLogsQuery = useLogs()
-    const userLogsQuery = useMyLogs()
+    const adminLogsQuery = useLogs(currentPage, itemsPerPage)
+    const userLogsQuery = useMyLogs(currentPage, itemsPerPage)
 
     const { data: logsData, isLoading, error } = isAdmin ? adminLogsQuery : userLogsQuery
 
     const logs = logsData?.logs || []
+    const total = logsData?.total || 0
+    const totalPages = logsData?.totalPages || 1
+    const hasNextPage = logsData?.hasNextPage || false
+    const hasPreviousPage = logsData?.hasPreviousPage || false
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
 
     if (isLoading) {
         return (
@@ -44,40 +56,52 @@ export function LogsTable() {
     }
 
     return (
-        <div className="mt-6 overflow-x-auto">
-            <table className="min-w-full border-gray-200 rounded-lg shadow-sm">
-                <thead className="border-b">
-                    <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Cliente</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Tipo de Atividade</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Módulo</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Data</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                    {logs.map((log) => (
-                        <tr key={log.id} className="hover:bg-gray-50">
-                            <td className="flex flex-col px-4 py-3">
-                                <p className="font-medium text-base">
-                                    {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'Usuário não encontrado'}
-                                </p>
-                                <span className="text-sm text-gray-500">
-                                    {log?.user?.accountType === 'admin' ? 'Administrador' : 'Cliente'}
-                                </span>
-                            </td>
-                            <td className="px-4 py-3">
-                                <LogBadge text={log.activityType} />
-                            </td>
-                            <td className="px-4 py-3">
-                                <ModuleBadge text={log.module} />
-                            </td>
-                            <td className="px-4 py-3">
-                                <LogBadge text={format(new Date(log.activityDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })} />
-                            </td>
+        <div className="mt-6">
+            <div className="overflow-x-auto">
+                <table className="min-w-full border-gray-200 rounded-lg shadow-sm">
+                    <thead className="border-b">
+                        <tr>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Cliente</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Tipo de Atividade</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Módulo</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Data</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {logs.map((log) => (
+                            <tr key={log.id} className="hover:bg-gray-50">
+                                <td className="flex flex-col px-4 py-3">
+                                    <p className="font-medium text-base">
+                                        {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'Usuário não encontrado'}
+                                    </p>
+                                    <span className="text-sm text-gray-500">
+                                        {log?.user?.accountType === 'admin' ? 'Administrador' : 'Cliente'}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <LogBadge text={log.activityType} />
+                                </td>
+                                <td className="px-4 py-3">
+                                    <ModuleBadge text={log.module} />
+                                </td>
+                                <td className="px-4 py-3">
+                                    <LogBadge text={format(new Date(log.activityDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })} />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasNextPage={hasNextPage}
+                hasPreviousPage={hasPreviousPage}
+                onPageChange={handlePageChange}
+                itemsPerPage={itemsPerPage}
+                totalItems={total}
+            />
         </div>
     )
 }

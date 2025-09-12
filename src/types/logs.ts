@@ -18,6 +18,10 @@ export interface Log {
 export interface LogsResponse {
     total: number
     logs: Log[]
+    totalPages?: number
+    currentPage?: number
+    hasNextPage?: boolean
+    hasPreviousPage?: boolean
 }
 
 export interface CreateLogRequest {
