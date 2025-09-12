@@ -8,6 +8,7 @@ import { dateLocale } from "@/lib/date-config";
 import { Calendar } from "../ui/calendar";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { TimePicker } from "./TimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -17,6 +18,8 @@ import { toast } from "react-toastify";
 import { Room } from "@/types/room";
 
 export function ScheduleHeader() {
+    const { user } = useAuth();
+    const isAdmin = user?.accountType === 'admin';
     const router = useRouter();
     const searchParams = useSearchParams();
     const [date, setDate] = useState<Date | undefined>(() => {
@@ -65,7 +68,6 @@ export function ScheduleHeader() {
         }
     }
 
-    // Atualiza os query params da URL ao alterar filtros
     useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
         if (name) {
@@ -111,97 +113,103 @@ export function ScheduleHeader() {
                 </Popover>
             </div>
 
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button size={'lg'}>
-                        Novo Agendamento
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[400px]">
-                    <DialogHeader className="border-b pb-4">
-                        <DialogTitle>
+            {isAdmin ? (
+                <Button size="lg">
+                    Ajustes de agendamento
+                </Button>
+            ) : (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button size={'lg'}>
                             Novo Agendamento
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm">Selecione uma <strong>data</strong> (Obrigatório)</label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        data-empty={!date}
-                                        className="flex items-center justify-between h-11 w-full text-zinc-400"
-                                    >
-                                        <div>
-                                            {date ? format(date, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
-                                        </div>
-                                        <CalendarIcon />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar mode="single" selected={date} onSelect={setDate} locale={dateLocale} />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm">Selecione um <strong>horário</strong> (Obrigatório)</label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        data-empty={!selectedTime}
-                                        className="flex items-center justify-between h-11 w-full text-zinc-400"
-                                    >
-                                        <div>
-                                            {selectedTime ? selectedTime : <span>Selecione</span>}
-                                        </div>
-                                        <Clock />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <TimePicker value={selectedTime} onSelect={setSelectedTime} />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm">Selecione uma <strong>sala</strong> (Obrigatório)</label>
-                            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                                <SelectTrigger className="h-11 w-full">
-                                    <SelectValue placeholder="Selecione uma sala" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableRooms.map((room: Room) => (
-                                        <SelectItem key={room.id} value={room.id.toString()}>
-                                            <span>Sala {room.number}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {createScheduleMutation.isError && (
-                            <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded text-sm">
-                                Erro ao criar agendamento. Tente novamente.
-                            </div>
-                        )}
-                    </div>
-
-                    <DialogFooter className="mt-5 border-t">
-                        <Button
-                            size={'lg'}
-                            className="w-full mt-5"
-                            onClick={handleCreateSchedule}
-                            disabled={!canCreate || isCreating}
-                        >
-                            {isCreating ? 'Criando...' : 'Confirmar Agendamento'}
                         </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                    </DialogTrigger>
+                    <DialogContent className="w-[400px]">
+                        <DialogHeader className="border-b pb-4">
+                            <DialogTitle>
+                                Novo Agendamento
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm">Selecione uma <strong>data</strong> (Obrigatório)</label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            data-empty={!date}
+                                            className="flex items-center justify-between h-11 w-full text-zinc-400"
+                                        >
+                                            <div>
+                                                {date ? format(date, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
+                                            </div>
+                                            <CalendarIcon />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar mode="single" selected={date} onSelect={setDate} locale={dateLocale} />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm">Selecione um <strong>horário</strong> (Obrigatório)</label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            data-empty={!selectedTime}
+                                            className="flex items-center justify-between h-11 w-full text-zinc-400"
+                                        >
+                                            <div>
+                                                {selectedTime ? selectedTime : <span>Selecione</span>}
+                                            </div>
+                                            <Clock />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <TimePicker value={selectedTime} onSelect={setSelectedTime} />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm">Selecione uma <strong>sala</strong> (Obrigatório)</label>
+                                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                                    <SelectTrigger className="h-11 w-full">
+                                        <SelectValue placeholder="Selecione uma sala" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableRooms.map((room: Room) => (
+                                            <SelectItem key={room.id} value={room.id.toString()}>
+                                                <span>Sala {room.number}</span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {createScheduleMutation.isError && (
+                                <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded text-sm">
+                                    Erro ao criar agendamento. Tente novamente.
+                                </div>
+                            )}
+                        </div>
+
+                        <DialogFooter className="mt-5 border-t">
+                            <Button
+                                size={'lg'}
+                                className="w-full mt-5"
+                                onClick={handleCreateSchedule}
+                                disabled={!canCreate || isCreating}
+                            >
+                                {isCreating ? 'Criando...' : 'Confirmar Agendamento'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </header>
     )
 }
