@@ -12,9 +12,12 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "../ui/alert-dialog"
-import { useMySchedules, useSchedules, useCancelSchedule, useUpdateScheduleStatus } from "@/hooks/useSchedules"
+import { useCancelSchedule, useUpdateScheduleStatus } from "@/hooks/useSchedules"
+import { usePaginatedSchedules, usePaginatedMySchedules } from "@/hooks/usePaginatedSchedules"
+import { Pagination } from "@/components/ui/pagination"
 import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
+import { useState } from "react"
 import { dateLocale } from "@/lib/date-config"
 import { toast } from "react-toastify"
 import { ScheduleBadge } from "./ScheduleBadge"
@@ -23,11 +26,18 @@ export function ScheduleTable() {
 
     const { user } = useAuth()
     const isAdmin = user?.accountType === 'admin'
-    const allSchedulesQuery = useSchedules()
-    const mySchedulesQuery = useMySchedules()
-    const schedules = isAdmin ? (allSchedulesQuery.data ?? []) : (mySchedulesQuery.data ?? [])
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 8
+    const allSchedulesQuery = usePaginatedSchedules(currentPage, itemsPerPage)
+    const mySchedulesQuery = usePaginatedMySchedules(currentPage, itemsPerPage)
+    const schedulesData = isAdmin ? allSchedulesQuery.data : mySchedulesQuery.data
     const isLoading = isAdmin ? allSchedulesQuery.isLoading : mySchedulesQuery.isLoading
     const error = isAdmin ? allSchedulesQuery.error : mySchedulesQuery.error
+    const schedules = schedulesData?.schedules ?? []
+    const total = schedulesData?.total ?? 0
+    const totalPages = schedulesData?.totalPages ?? 1
+    const hasNextPage = schedulesData?.hasNextPage ?? false
+    const hasPreviousPage = schedulesData?.hasPreviousPage ?? false
     const cancelScheduleMutation = useCancelSchedule()
     const updateStatusMutation = useUpdateScheduleStatus()
 
@@ -75,117 +85,128 @@ export function ScheduleTable() {
     }
 
     return (
-        <div className="mt-6 overflow-x-auto">
-            <table className="min-w-full border-gray-200 rounded-lg shadow-sm">
-                <thead className="border-b">
-                    <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Data agendamento</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nome</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Sala de agendamento</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Ação</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                    {schedules.map((schedule) => (
-                        <tr key={schedule.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm text-gray-800">
-                                {format(new Date(schedule.scheduleDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })}
-                            </td>
-                            <td className="px-4 py-3">
-                                <div>
-                                    <span className="text-base font-medium text-gray-900">
-                                        {isAdmin
-                                            ? `${schedule.user?.firstName || ''} ${schedule.user?.lastName || ''}`
-                                            : `${user?.firstName} ${user?.lastName}`}
+        <div className="mt-6">
+            <div className="overflow-x-auto">
+                <table className="min-w-full border-gray-200 rounded-lg shadow-sm">
+                    <thead className="border-b">
+                        <tr>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Data agendamento</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nome</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Sala de agendamento</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Status</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {schedules.map((schedule) => (
+                            <tr key={schedule.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm text-gray-800">
+                                    {format(new Date(schedule.scheduleDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div>
+                                        <span className="text-base font-medium text-gray-900">
+                                            {isAdmin
+                                                ? `${schedule.user?.firstName || ''} ${schedule.user?.lastName || ''}`
+                                                : `${user?.firstName} ${user?.lastName}`}
+                                        </span>
+                                        <p className="text-xs text-gray-500">
+                                            {isAdmin
+                                                ? (schedule.user?.accountType === 'admin' ? 'Administrador' : 'Cliente')
+                                                : (user?.accountType === 'customer' ? 'Cliente' : 'Administrador')}
+                                        </p>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span className="gap-1 inline-flex items-center justify-center px-3 py-1 text-sm font-medium text-white bg-black rounded-full">
+                                        Sala <strong>{schedule.room?.number || schedule.roomId}</strong>
                                     </span>
-                                    <p className="text-xs text-gray-500">
-                                        {isAdmin
-                                            ? (schedule.user?.accountType === 'admin' ? 'Administrador' : 'Cliente')
-                                            : (user?.accountType === 'customer' ? 'Cliente' : 'Administrador')}
-                                    </p>
-                                </div>
-                            </td>
-                            <td className="px-4 py-3">
-                                <span className="gap-1 inline-flex items-center justify-center px-3 py-1 text-sm font-medium text-white bg-black rounded-full">
-                                    Sala <strong>{schedule.room?.number || schedule.roomId}</strong>
-                                </span>
-                            </td>
-                            <td className="px-4 py-3">
-                                <ScheduleBadge status={schedule.status} />
-                            </td>
-                            <td className="px-4 py-3 flex gap-2 items-center">
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button
-                                            size="icon"
-                                            className="rounded-full"
-                                            disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
-                                            variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
-                                        >
-                                            <X />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Cancelar agendamento</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
-                                            <AlertDialogAction
-                                                onClick={() => handleCancelSchedule(schedule.id)}
-                                                className="bg-red-600 hover:bg-red-700"
-                                            >
-                                                Sim, cancelar agendamento
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                                {isAdmin && schedule.status === 'pending' && (
+                                </td>
+                                <td className="px-4 py-3">
+                                    <ScheduleBadge status={schedule.status} />
+                                </td>
+                                <td className="px-4 py-3 flex gap-2 items-center">
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button
                                                 size="icon"
-                                                className="rounded-full text-white"
-                                                disabled={updateStatusMutation.isPending}
-                                                title="Aprovar agendamento"
+                                                className="rounded-full"
+                                                disabled={schedule.status === 'cancelled' || cancelScheduleMutation.isPending}
+                                                variant={schedule.status === 'cancelled' ? 'outline' : 'default'}
                                             >
-                                                <Check />
+                                                <X />
                                             </Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Aprovar agendamento</AlertDialogTitle>
+                                                <AlertDialogTitle>Cancelar agendamento</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Tem certeza que deseja aprovar este agendamento?
+                                                    Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Não, manter em análise</AlertDialogCancel>
+                                                <AlertDialogCancel>Não, manter agendamento</AlertDialogCancel>
                                                 <AlertDialogAction
-                                                    onClick={async () => {
-                                                        try {
-                                                            await updateStatusMutation.mutateAsync({ id: schedule.id, data: { status: 'confirmed' } })
-                                                            toast.success('Agendamento aprovado!', { position: 'top-right', autoClose: 3000 })
-                                                        } catch {
-                                                            toast.error('Erro ao aprovar agendamento.', { position: 'top-right', autoClose: 4000 })
-                                                        }
-                                                    }}
+                                                    onClick={() => handleCancelSchedule(schedule.id)}
+                                                    className="bg-red-600 hover:bg-red-700"
                                                 >
-                                                    Sim, aprovar agendamento
+                                                    Sim, cancelar agendamento
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                    {isAdmin && schedule.status === 'pending' && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    size="icon"
+                                                    className="rounded-full text-white"
+                                                    disabled={updateStatusMutation.isPending}
+                                                    title="Aprovar agendamento"
+                                                >
+                                                    <Check />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Aprovar agendamento</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Tem certeza que deseja aprovar este agendamento?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Não, manter em análise</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        onClick={async () => {
+                                                            try {
+                                                                await updateStatusMutation.mutateAsync({ id: schedule.id, data: { status: 'confirmed' } })
+                                                                toast.success('Agendamento aprovado!', { position: 'top-right', autoClose: 3000 })
+                                                            } catch {
+                                                                toast.error('Erro ao aprovar agendamento.', { position: 'top-right', autoClose: 4000 })
+                                                            }
+                                                        }}
+                                                    >
+                                                        Sim, aprovar agendamento
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasNextPage={hasNextPage}
+                hasPreviousPage={hasPreviousPage}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={total}
+            />
         </div>
     )
 }

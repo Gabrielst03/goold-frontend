@@ -90,13 +90,13 @@ export const roomAPI = {
 }
 
 export const scheduleAPI = {
-    getSchedules: async (): Promise<Schedule[]> => {
-        const response = await api.get('/schedules')
+    getSchedules: async (page: number = 1, limit: number = 10): Promise<import("@/types/schedule").ScheduleResponse> => {
+        const response = await api.get('/schedules', { params: { page, limit } })
         return response.data
     },
 
-    getMySchedules: async (): Promise<Schedule[]> => {
-        const response = await api.get('/schedules/my-schedules')
+    getMySchedules: async (page: number = 1, limit: number = 10): Promise<import("@/types/schedule").ScheduleResponse> => {
+        const response = await api.get('/schedules/my-schedules', { params: { page, limit } })
         return response.data
     },
 

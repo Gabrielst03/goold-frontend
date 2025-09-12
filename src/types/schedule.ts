@@ -1,3 +1,10 @@
+export interface ScheduleResponse {
+    schedules: Schedule[];
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+}
 import { Room } from './room'
 
 export interface Schedule {
