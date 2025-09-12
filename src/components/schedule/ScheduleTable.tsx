@@ -1,5 +1,5 @@
 'use client'
-import { X } from "lucide-react"
+import { X, Check } from "lucide-react"
 import { Button } from "../ui/button"
 import {
     AlertDialog,
@@ -12,7 +12,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger
 } from "../ui/alert-dialog"
-import { useMySchedules, useCancelSchedule } from "@/hooks/useSchedules"
+import { useMySchedules, useSchedules, useCancelSchedule, useUpdateScheduleStatus } from "@/hooks/useSchedules"
 import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
 import { dateLocale } from "@/lib/date-config"
@@ -20,9 +20,16 @@ import { toast } from "react-toastify"
 import { ScheduleBadge } from "./ScheduleBadge"
 
 export function ScheduleTable() {
+
     const { user } = useAuth()
-    const { data: schedules = [], isLoading, error } = useMySchedules()
+    const isAdmin = user?.accountType === 'admin'
+    const allSchedulesQuery = useSchedules()
+    const mySchedulesQuery = useMySchedules()
+    const schedules = isAdmin ? (allSchedulesQuery.data ?? []) : (mySchedulesQuery.data ?? [])
+    const isLoading = isAdmin ? allSchedulesQuery.isLoading : mySchedulesQuery.isLoading
+    const error = isAdmin ? allSchedulesQuery.error : mySchedulesQuery.error
     const cancelScheduleMutation = useCancelSchedule()
+    const updateStatusMutation = useUpdateScheduleStatus()
 
     const handleCancelSchedule = async (scheduleId: number) => {
         try {
@@ -88,10 +95,14 @@ export function ScheduleTable() {
                             <td className="px-4 py-3">
                                 <div>
                                     <span className="text-base font-medium text-gray-900">
-                                        {user?.firstName} {user?.lastName}
+                                        {isAdmin
+                                            ? `${schedule.user?.firstName || ''} ${schedule.user?.lastName || ''}`
+                                            : `${user?.firstName} ${user?.lastName}`}
                                     </span>
                                     <p className="text-xs text-gray-500">
-                                        {user?.accountType === 'customer' ? 'Cliente' : 'Administrador'}
+                                        {isAdmin
+                                            ? (schedule.user?.accountType === 'admin' ? 'Administrador' : 'Cliente')
+                                            : (user?.accountType === 'customer' ? 'Cliente' : 'Administrador')}
                                     </p>
                                 </div>
                             </td>
@@ -103,7 +114,44 @@ export function ScheduleTable() {
                             <td className="px-4 py-3">
                                 <ScheduleBadge status={schedule.status} />
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-4 py-3 flex gap-2 items-center">
+                                {isAdmin && schedule.status === 'pending' && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                size="icon"
+                                                className="rounded-full text-white"
+                                                disabled={updateStatusMutation.isPending}
+                                                title="Aprovar agendamento"
+                                            >
+                                                <Check />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Aprovar agendamento</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Tem certeza que deseja aprovar este agendamento?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Não, manter em análise</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={async () => {
+                                                        try {
+                                                            await updateStatusMutation.mutateAsync({ id: schedule.id, data: { status: 'confirmed' } })
+                                                            toast.success('Agendamento aprovado!', { position: 'top-right', autoClose: 3000 })
+                                                        } catch {
+                                                            toast.error('Erro ao aprovar agendamento.', { position: 'top-right', autoClose: 4000 })
+                                                        }
+                                                    }}
+                                                >
+                                                    Sim, aprovar agendamento
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button

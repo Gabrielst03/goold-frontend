@@ -9,6 +9,13 @@ export interface Schedule {
     createdAt: string
     updatedAt: string
     room?: Room
+    user?: {
+        id: number
+        firstName: string
+        lastName: string
+        email: string
+        accountType: 'customer' | 'admin'
+    }
 }
 
 export interface CreateScheduleRequest {
