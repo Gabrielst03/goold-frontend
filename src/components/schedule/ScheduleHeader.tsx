@@ -6,19 +6,27 @@ import { CalendarIcon, Clock } from "lucide-react";
 import { format } from 'date-fns'
 import { dateLocale } from "@/lib/date-config";
 import { Calendar } from "../ui/calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { TimePicker } from "./TimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAvailableRooms } from "@/hooks/useRooms";
 import { useCreateSchedule } from "@/hooks/useSchedules";
 import { toast } from "react-toastify";
+import { Room } from "@/types/room";
 
 export function ScheduleHeader() {
-    const [date, setDate] = useState<Date>()
-    const [selectedTime, setSelectedTime] = useState<string>()
-    const [selectedRoom, setSelectedRoom] = useState<string>()
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [date, setDate] = useState<Date | undefined>(() => {
+        const dateParam = searchParams.get('date');
+        return dateParam ? new Date(dateParam) : undefined;
+    });
+    const [name, setName] = useState<string>(searchParams.get('name') || '');
+    const [selectedTime, setSelectedTime] = useState<string>();
+    const [selectedRoom, setSelectedRoom] = useState<string>();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const { data: availableRooms = [] } = useAvailableRooms()
     const createScheduleMutation = useCreateSchedule()
@@ -57,6 +65,23 @@ export function ScheduleHeader() {
         }
     }
 
+    // Atualiza os query params da URL ao alterar filtros
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (name) {
+            params.set('name', name);
+        } else {
+            params.delete('name');
+        }
+        if (date) {
+            params.set('date', date.toISOString().split('T')[0]);
+        } else {
+            params.delete('date');
+        }
+        router.replace(`?${params.toString()}`);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [name, date]);
+
     return (
         <header className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center gap-4">
@@ -64,6 +89,8 @@ export function ScheduleHeader() {
                     placeholder="Filtre por nome"
                     className="w-[300px]"
                     showSearchIcon={true}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
                 />
                 <Popover>
                     <PopoverTrigger asChild>
@@ -147,7 +174,7 @@ export function ScheduleHeader() {
                                     <SelectValue placeholder="Selecione uma sala" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {availableRooms.map((room) => (
+                                    {availableRooms.map((room: Room) => (
                                         <SelectItem key={room.id} value={room.id.toString()}>
                                             <span>Sala {room.number}</span>
                                         </SelectItem>

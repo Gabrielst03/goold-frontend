@@ -17,7 +17,8 @@ import { usePaginatedSchedules, usePaginatedMySchedules } from "@/hooks/usePagin
 import { Pagination } from "@/components/ui/pagination"
 import { useAuth } from "@/contexts/AuthContext"
 import { format } from "date-fns"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { useSearchParams } from 'next/navigation';
 import { dateLocale } from "@/lib/date-config"
 import { toast } from "react-toastify"
 import { ScheduleBadge } from "./ScheduleBadge"
@@ -34,6 +35,29 @@ export function ScheduleTable() {
     const isLoading = isAdmin ? allSchedulesQuery.isLoading : mySchedulesQuery.isLoading
     const error = isAdmin ? allSchedulesQuery.error : mySchedulesQuery.error
     const schedules = schedulesData?.schedules ?? []
+
+    const searchParams = useSearchParams();
+    const filterName = searchParams.get('name')?.toLowerCase() || '';
+    const filterDate = searchParams.get('date') || '';
+
+    const filteredSchedules = useMemo(() => {
+        return schedules.filter(schedule => {
+            let matchesName = true;
+            let matchesDate = true;
+            if (filterName) {
+                const fullName = (isAdmin
+                    ? `${schedule.user?.firstName || ''} ${schedule.user?.lastName || ''}`
+                    : `${user?.firstName} ${user?.lastName}`
+                ).toLowerCase();
+                matchesName = fullName.includes(filterName);
+            }
+            if (filterDate) {
+                const scheduleDate = schedule.scheduleDate.split('T')[0];
+                matchesDate = scheduleDate === filterDate;
+            }
+            return matchesName && matchesDate;
+        });
+    }, [schedules, filterName, filterDate, isAdmin, user]);
     const total = schedulesData?.total ?? 0
     const totalPages = schedulesData?.totalPages ?? 1
     const hasNextPage = schedulesData?.hasNextPage ?? false
@@ -75,7 +99,7 @@ export function ScheduleTable() {
         )
     }
 
-    if (schedules.length === 0) {
+    if (filteredSchedules.length === 0) {
         return (
             <div className="mt-6 text-center text-gray-500 py-8">
                 <p>Nenhum agendamento encontrado</p>
@@ -98,7 +122,7 @@ export function ScheduleTable() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {schedules.map((schedule) => (
+                        {filteredSchedules.map((schedule) => (
                             <tr key={schedule.id} className="hover:bg-gray-50">
                                 <td className="px-4 py-3 text-sm text-gray-800">
                                     {format(new Date(schedule.scheduleDate), "dd/MM/yyyy 'às' HH:mm", { locale: dateLocale })}
