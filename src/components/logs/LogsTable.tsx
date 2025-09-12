@@ -7,6 +7,7 @@ import { LogBadge } from "./LogBadge"
 import { ModuleBadge } from "./ModuleBadge"
 import { Pagination } from "@/components/ui/pagination"
 import { useState } from "react"
+import { Log } from "@/types/logs"
 
 export function LogsTable() {
     const { user } = useAuth()
@@ -68,7 +69,7 @@ export function LogsTable() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {logs.map((log) => (
+                        {logs.map((log: Log) => (
                             <tr key={log.id} className="hover:bg-gray-50">
                                 <td className="flex flex-col px-4 py-3">
                                     <p className="font-medium text-base">

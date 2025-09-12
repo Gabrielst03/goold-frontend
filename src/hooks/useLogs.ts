@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { logsAPI } from '@/services/api'
+import { getLogs } from '@/actions/logs/get'
+import { getMyLogs } from '@/actions/logs/getMy'
+import { getLogsByModule } from '@/actions/logs/getByModule'
+import { createLog } from '@/actions/logs/create'
 import { CreateLogRequest } from '@/types/logs'
 
 export const logsKeys = {
@@ -15,7 +18,7 @@ export const logsKeys = {
 export function useLogs(page: number = 1, limit: number = 10) {
     return useQuery({
         queryKey: logsKeys.list(page, limit),
-        queryFn: () => logsAPI.getLogs(page, limit),
+        queryFn: () => getLogs(page, limit),
         staleTime: 2 * 60 * 1000,
     })
 }
@@ -23,7 +26,7 @@ export function useLogs(page: number = 1, limit: number = 10) {
 export function useMyLogs(page: number = 1, limit: number = 10) {
     return useQuery({
         queryKey: logsKeys.my(page, limit),
-        queryFn: () => logsAPI.getMyLogs(page, limit),
+        queryFn: () => getMyLogs(page, limit),
         staleTime: 1 * 60 * 1000,
     })
 }
@@ -31,7 +34,7 @@ export function useMyLogs(page: number = 1, limit: number = 10) {
 export function useLogsByModule(module: string, page: number = 1, limit: number = 10) {
     return useQuery({
         queryKey: logsKeys.module(module, page, limit),
-        queryFn: () => logsAPI.getLogsByModule(module, page, limit),
+        queryFn: () => getLogsByModule(module, page, limit),
         enabled: !!module,
         staleTime: 2 * 60 * 1000,
     })
@@ -41,7 +44,7 @@ export function useCreateLog() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: CreateLogRequest) => logsAPI.createLog(data),
+        mutationFn: (data: CreateLogRequest) => createLog(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: logsKeys.all })
         },

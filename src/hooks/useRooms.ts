@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { roomAPI } from '@/services/api'
-import { Room, CreateRoomRequest, UpdateRoomRequest } from '@/types/room'
+import { getRooms } from '@/actions/room/get'
+import { getAvailableRooms } from '@/actions/room/getAvailable'
+import { getRoomById } from '@/actions/room/getById'
+import { createRoom } from '@/actions/room/create'
+import { updateRoom } from '@/actions/room/update'
+import { updateRoomAvailability } from '@/actions/room/updateAvailability'
+import { deleteRoom } from '@/actions/room/delete'
+import { CreateRoomRequest, UpdateRoomRequest } from '@/types/room'
 
 export const roomKeys = {
     all: ['rooms'] as const,
@@ -14,7 +20,7 @@ export const roomKeys = {
 export function useRooms() {
     return useQuery({
         queryKey: roomKeys.lists(),
-        queryFn: roomAPI.getRooms,
+        queryFn: getRooms,
         staleTime: 5 * 60 * 1000, // 5 minutos
     })
 }
@@ -22,7 +28,7 @@ export function useRooms() {
 export function useAvailableRooms() {
     return useQuery({
         queryKey: roomKeys.available(),
-        queryFn: roomAPI.getAvailableRooms,
+        queryFn: getAvailableRooms,
         staleTime: 2 * 60 * 1000, // 2 minutos
     })
 }
@@ -30,7 +36,7 @@ export function useAvailableRooms() {
 export function useRoom(id: number) {
     return useQuery({
         queryKey: roomKeys.detail(id),
-        queryFn: () => roomAPI.getRoomById(id),
+        queryFn: () => getRoomById(id),
         enabled: !!id,
     })
 }
@@ -39,7 +45,7 @@ export function useCreateRoom() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: CreateRoomRequest) => roomAPI.createRoom(data),
+        mutationFn: (data: CreateRoomRequest) => createRoom(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: roomKeys.all })
         },
@@ -51,7 +57,7 @@ export function useUpdateRoom() {
 
     return useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateRoomRequest }) =>
-            roomAPI.updateRoom(id, data),
+            updateRoom(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: roomKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: roomKeys.lists() })
@@ -65,7 +71,7 @@ export function useUpdateRoomAvailability() {
 
     return useMutation({
         mutationFn: ({ id, availability }: { id: number; availability: boolean }) =>
-            roomAPI.updateRoomAvailability(id, availability),
+            updateRoomAvailability(id, availability),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: roomKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: roomKeys.lists() })
@@ -78,7 +84,7 @@ export function useDeleteRoom() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: number) => roomAPI.deleteRoom(id),
+        mutationFn: (id: number) => deleteRoom(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: roomKeys.all })
         },

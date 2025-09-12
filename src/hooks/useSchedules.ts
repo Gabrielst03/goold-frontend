@@ -1,5 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { scheduleAPI } from '@/services/api'
+import { getSchedules } from '@/actions/schedule/get'
+import { getMySchedules } from '@/actions/schedule/getMy'
+import { getUpcomingSchedules } from '@/actions/schedule/getUpcoming'
+import { getScheduleById } from '@/actions/schedule/getById'
+import { createSchedule } from '@/actions/schedule/create'
+import { updateSchedule } from '@/actions/schedule/update'
+import { updateScheduleStatus } from '@/actions/schedule/updateStatus'
+import { cancelSchedule } from '@/actions/schedule/cancel'
+import { deleteSchedule } from '@/actions/schedule/delete'
 import { CreateScheduleRequest, UpdateScheduleRequest, UpdateScheduleStatusRequest } from '@/types/schedule'
 
 export const scheduleKeys = {
@@ -15,7 +23,7 @@ export const scheduleKeys = {
 export function useSchedules() {
     return useQuery({
         queryKey: scheduleKeys.lists(),
-        queryFn: scheduleAPI.getSchedules,
+        queryFn: () => getSchedules(1, 100),
         staleTime: 2 * 60 * 1000,
     })
 }
@@ -23,7 +31,7 @@ export function useSchedules() {
 export function useMySchedules() {
     return useQuery({
         queryKey: scheduleKeys.my(),
-        queryFn: scheduleAPI.getMySchedules,
+        queryFn: () => getMySchedules(1, 100),
         staleTime: 1 * 60 * 1000,
     })
 }
@@ -31,7 +39,7 @@ export function useMySchedules() {
 export function useUpcomingSchedules() {
     return useQuery({
         queryKey: scheduleKeys.upcoming(),
-        queryFn: scheduleAPI.getUpcomingSchedules,
+        queryFn: getUpcomingSchedules,
         staleTime: 1 * 60 * 1000,
     })
 }
@@ -39,7 +47,7 @@ export function useUpcomingSchedules() {
 export function useSchedule(id: number) {
     return useQuery({
         queryKey: scheduleKeys.detail(id),
-        queryFn: () => scheduleAPI.getScheduleById(id),
+        queryFn: () => getScheduleById(id),
         enabled: !!id,
     })
 }
@@ -48,7 +56,7 @@ export function useCreateSchedule() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: CreateScheduleRequest) => scheduleAPI.createSchedule(data),
+        mutationFn: (data: CreateScheduleRequest) => createSchedule(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
         },
@@ -60,7 +68,7 @@ export function useUpdateSchedule() {
 
     return useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateScheduleRequest }) =>
-            scheduleAPI.updateSchedule(id, data),
+            updateSchedule(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
@@ -73,7 +81,7 @@ export function useUpdateScheduleStatus() {
 
     return useMutation({
         mutationFn: ({ id, data }: { id: number; data: UpdateScheduleStatusRequest }) =>
-            scheduleAPI.updateScheduleStatus(id, data),
+            updateScheduleStatus(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
@@ -85,7 +93,7 @@ export function useCancelSchedule() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: number) => scheduleAPI.cancelSchedule(id),
+        mutationFn: (id: number) => cancelSchedule(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
         },
@@ -96,7 +104,7 @@ export function useDeleteSchedule() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: number) => scheduleAPI.deleteSchedule(id),
+        mutationFn: (id: number) => deleteSchedule(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
         },
