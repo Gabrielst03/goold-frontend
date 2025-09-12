@@ -12,7 +12,7 @@ export function LogsTable() {
     const { user } = useAuth()
     const isAdmin = user?.accountType === 'admin'
     const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
+    const itemsPerPage = 8
 
     const adminLogsQuery = useLogs(currentPage, itemsPerPage)
     const userLogsQuery = useMyLogs(currentPage, itemsPerPage)
