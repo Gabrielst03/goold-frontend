@@ -159,10 +159,10 @@ export function UsersTable() {
                                         </td>
                                         <td className="px-4 py-4">
                                             <div className="flex gap-2">
-                                                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                                <Badge>
                                                     Agendamento
                                                 </Badge>
-                                                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                                <Badge>
                                                     Logs
                                                 </Badge>
                                             </div>
