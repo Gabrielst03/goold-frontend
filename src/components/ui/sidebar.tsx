@@ -17,7 +17,11 @@ export function Sidebar() {
             </div>
 
             <nav className="flex flex-col gap-2 mt-6 px-4 flex-1">
-                {sidebarItems.map(({ href, label, icon: Icon }) => {
+                {sidebarItems.map(({ href, label, icon: Icon, adminOnly }) => {
+                    if (adminOnly && user?.accountType !== 'admin') {
+                        return null;
+                    }
+
                     const isActive = pathname === href;
                     return (
                         <Link
