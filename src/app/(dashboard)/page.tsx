@@ -14,7 +14,7 @@ export default function Page() {
       <div className='flex min-h-screen'>
         <Sidebar />
 
-        <div className='flex flex-col min-h-screen w-full'>
+        <div className='flex flex-col min-h-screen w-full ml-64'>
           <Header
             title={`Bem-vindo, ${user?.firstName}!`}
             description='Acompanhe todos os seus agendamentos de forma simples.'

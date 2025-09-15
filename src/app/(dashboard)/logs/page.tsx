@@ -15,7 +15,7 @@ export default function LogsPage() {
             <div className='flex min-h-screen'>
                 <Sidebar />
 
-                <div className='flex flex-col min-h-screen w-full'>
+                <div className='flex flex-col min-h-screen w-full ml-64'>
                     <Header
                         title={isAdmin ? "Logs do Sistema" : "Meus Logs"}
                         description={isAdmin ? "Visualize todas as atividades e eventos do sistema" : "Visualize suas atividades e eventos no sistema"}

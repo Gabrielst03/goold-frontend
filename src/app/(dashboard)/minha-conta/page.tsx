@@ -142,7 +142,7 @@ export default function MinhaContaPage() {
         <ProtectedRoute>
             <div className='flex min-h-screen'>
                 <Sidebar />
-                <div className='flex flex-col min-h-screen w-full'>
+                <div className='flex flex-col min-h-screen w-full ml-64'>
                     <Header title="Minha Conta" description="Ajuste informações da sua conta de forma simples" />
                     <div className='flex flex-col mt-8 mx-9'>
                         <div className="max-w-xl mx-auto w-full">

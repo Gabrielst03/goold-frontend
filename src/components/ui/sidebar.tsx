@@ -11,7 +11,7 @@ export function Sidebar() {
     const { user } = useAuth();
 
     return (
-        <aside className="flex flex-col h-screen w-64 border-r bg-[#F6F4F1]">
+        <aside className="fixed left-0 top-0 flex flex-col h-screen w-64 border-r bg-[#F6F4F1] z-10">
             <div className="p-4 border-b">
                 <Image src="/logo.png" alt="Logo" width={64} height={64} />
             </div>
