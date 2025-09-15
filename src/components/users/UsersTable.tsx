@@ -30,6 +30,16 @@ export function UsersTable() {
         setCurrentPage(1);
     }, [name, date]);
 
+    useEffect(() => {
+        if (users.length > 0) {
+            const initialStatus: { [key: number]: boolean } = {};
+            users.forEach(user => {
+                initialStatus[user.id] = user.status;
+            });
+            setLocalUserStatus(initialStatus);
+        }
+    }, [users]);
+
     const filteredUsers = useMemo(() => {
         return users.filter(user => {
             let matchesName = true;
@@ -56,8 +66,6 @@ export function UsersTable() {
     const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const handleUserStatusChange = (userId: number, newStatus: boolean) => {
-
-
         setLocalUserStatus(prev => ({
             ...prev,
             [userId]: newStatus
@@ -66,6 +74,13 @@ export function UsersTable() {
         updateUserStatusMutation.mutate({
             id: userId,
             isActive: newStatus
+        }, {
+            onError: () => {
+                setLocalUserStatus(prev => ({
+                    ...prev,
+                    [userId]: !newStatus
+                }));
+            }
         });
     };
 
@@ -185,7 +200,7 @@ export function UsersTable() {
                                         <td className="px-4 py-4">
                                             <div className="flex items-center gap-2">
                                                 <Switch
-                                                    checked={localUserStatus[user.id] ?? user.status ?? true}
+                                                    checked={localUserStatus[user.id] ?? user.status}
                                                     onCheckedChange={(checked) => handleUserStatusChange(user.id, checked)}
                                                     disabled={user.id === currentUser?.id}
                                                 />
