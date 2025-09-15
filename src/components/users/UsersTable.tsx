@@ -242,34 +242,34 @@ export function UsersTable() {
                                                         </>
                                                     )}
                                                 </div>
-                                                {currentUser?.accountType === 'admin' && 
-                                                 user.id !== currentUser?.id && (
-                                                    <div className="relative group ml-2">
-                                                        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
-                                                                    onClick={() => {
-                                                                        setUserToPromote(user);
-                                                                        setActionType(user.accountType === 'customer' ? 'promote' : 'demote');
-                                                                        setIsDialogOpen(true);
-                                                                    }}
-                                                                    disabled={updateUserMutation.isPending}
-                                                                >
-                                                                    {user.accountType === 'customer' ? (
-                                                                        <UserCog className="h-3 w-3 text-green-600" />
-                                                                    ) : (
-                                                                        <UserX className="h-3 w-3 text-red-600" />
-                                                                    )}
-                                                                </Button>
-                                                            </AlertDialogTrigger>
+                                                {currentUser?.accountType === 'admin' &&
+                                                    user.id !== currentUser?.id && (
+                                                        <div className="relative group ml-2">
+                                                            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
+                                                                        onClick={() => {
+                                                                            setUserToPromote(user);
+                                                                            setActionType(user.accountType === 'customer' ? 'promote' : 'demote');
+                                                                            setIsDialogOpen(true);
+                                                                        }}
+                                                                        disabled={updateUserMutation.isPending}
+                                                                    >
+                                                                        {user.accountType === 'customer' ? (
+                                                                            <UserCog className="h-3 w-3 text-green-600" />
+                                                                        ) : (
+                                                                            <UserX className="h-3 w-3 text-red-600" />
+                                                                        )}
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>
-                                                                            {actionType === 'promote' 
-                                                                                ? 'Promover usuário a Administrador' 
+                                                                            {actionType === 'promote'
+                                                                                ? 'Promover usuário a Administrador'
                                                                                 : 'Rebaixar Administrador a Cliente'
                                                                             }
                                                                         </AlertDialogTitle>
@@ -312,8 +312,8 @@ export function UsersTable() {
                                                                             onClick={handleChangeAccountType}
                                                                             disabled={updateUserMutation.isPending}
                                                                         >
-                                                                            {updateUserMutation.isPending 
-                                                                                ? (actionType === 'promote' ? 'Promovendo...' : 'Rebaixando...') 
+                                                                            {updateUserMutation.isPending
+                                                                                ? (actionType === 'promote' ? 'Promovendo...' : 'Rebaixando...')
                                                                                 : (actionType === 'promote' ? 'Confirmar Promoção' : 'Confirmar Rebaixamento')
                                                                             }
                                                                         </AlertDialogAction>
