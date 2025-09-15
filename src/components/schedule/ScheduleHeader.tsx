@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { TimePicker } from "./TimePicker";
+import { RoomTimePicker } from "./RoomTimePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { useAvailableRooms } from "@/hooks/useRooms";
 import { useCreateSchedule } from "@/hooks/useSchedules";
@@ -35,6 +35,13 @@ export function ScheduleHeader() {
 
     const { data: availableRooms = [], refetch: refetchRooms } = useAvailableRooms()
     const createScheduleMutation = useCreateSchedule()
+
+    const selectedRoomData = availableRooms.find((room: Room) => room.id.toString() === selectedRoom)
+
+    const handleRoomChange = (roomId: string) => {
+        setSelectedRoom(roomId)
+        setSelectedTime(undefined)
+    }
 
     const canCreate = date && selectedTime && selectedRoom
     const isCreating = createScheduleMutation.isPending
@@ -156,29 +163,8 @@ export function ScheduleHeader() {
                             </div>
 
                             <div className="flex flex-col gap-1">
-                                <label className="text-sm">Selecione um <strong>horário</strong> (Obrigatório)</label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            data-empty={!selectedTime}
-                                            className="flex items-center justify-between h-11 w-full text-zinc-400"
-                                        >
-                                            <div>
-                                                {selectedTime ? selectedTime : <span>Selecione</span>}
-                                            </div>
-                                            <Clock />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <TimePicker value={selectedTime} onSelect={setSelectedTime} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
                                 <label className="text-sm">Selecione uma <strong>sala</strong> (Obrigatório)</label>
-                                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                                <Select value={selectedRoom} onValueChange={handleRoomChange}>
                                     <SelectTrigger className="h-11 w-full">
                                         <SelectValue placeholder="Selecione uma sala" />
                                     </SelectTrigger>
@@ -190,6 +176,32 @@ export function ScheduleHeader() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm">Selecione um <strong>horário</strong> (Obrigatório)</label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            data-empty={!selectedTime}
+                                            className="flex items-center justify-between h-11 w-full text-zinc-400"
+                                            disabled={!selectedRoomData}
+                                        >
+                                            <div>
+                                                {selectedTime ? selectedTime : <span>Selecione</span>}
+                                            </div>
+                                            <Clock />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <RoomTimePicker
+                                            room={selectedRoomData}
+                                            value={selectedTime}
+                                            onSelect={setSelectedTime}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             {createScheduleMutation.isError && (
