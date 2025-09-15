@@ -173,7 +173,7 @@ export function UsersTable() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-sm text-gray-800 max-w-[200px]">
-                                            <div className="truncate">
+                                            <div className="break-words whitespace-normal">
                                                 {typeof user.address === 'object' && user.address !== null
                                                     ? [
                                                         user.address.street,
