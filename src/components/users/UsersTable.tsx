@@ -2,6 +2,7 @@
 
 import { useUsers } from '@/hooks/useUsers';
 import { useUpdateUserStatus } from '@/hooks/useUpdateUserStatus';
+import { useUpdateUser } from '@/hooks/useUpdateUser';
 import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/auth';
 import { Input } from "../ui/input";
@@ -9,7 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Switch } from "../ui/switch";
-import { CalendarIcon } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { CalendarIcon, UserCog } from "lucide-react";
 import { format } from 'date-fns';
 import { dateLocale } from "@/lib/date-config";
 import { Calendar } from "../ui/calendar";
@@ -20,10 +22,13 @@ export function UsersTable() {
     const { data: users = [], isLoading, error } = useUsers();
     const { user: currentUser } = useAuth();
     const updateUserStatusMutation = useUpdateUserStatus();
+    const updateUserMutation = useUpdateUser();
     const [date, setDate] = useState<string | undefined>(undefined);
     const [name, setName] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [localUserStatus, setLocalUserStatus] = useState<{ [key: number]: boolean }>({});
+    const [userToPromote, setUserToPromote] = useState<User | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const itemsPerPage = 8;
 
     useEffect(() => {
@@ -80,6 +85,24 @@ export function UsersTable() {
                     ...prev,
                     [userId]: !newStatus
                 }));
+            }
+        });
+    };
+
+    const handlePromoteToAdmin = () => {
+        if (!userToPromote) return;
+
+        updateUserMutation.mutate({
+            id: userToPromote.id,
+            accountType: 'admin'
+        }, {
+            onSuccess: () => {
+                setUserToPromote(null);
+                setIsDialogOpen(false);
+            },
+            onError: (error) => {
+                console.error('Erro ao promover usuário:', error);
+                setIsDialogOpen(false);
             }
         });
     };
@@ -187,34 +210,89 @@ export function UsersTable() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <div className="flex gap-2">
-                                                {user.accountType === 'admin' && (
-                                                    <div className='flex gap-2'>
-                                                        <Badge>
-                                                            Agendamento
-                                                        </Badge>
-                                                        <Badge>
-                                                            Logs
-                                                        </Badge>
-                                                        <Badge>
-                                                            Clientes
-                                                        </Badge>
-
-                                                    </div>
-                                                )}
-                                                {user.accountType === 'customer' && (
-                                                    <div className='flex gap-2'>
-                                                        <Badge>
-                                                            Agendamento
-                                                        </Badge>
-                                                        <Badge>
-                                                            Logs
-                                                        </Badge>
-                                                        <Badge variant='outline'>
-                                                            Clientes
-                                                        </Badge>
-                                                    </div>
-                                                )}
+                                            <div className="flex gap-2 items-center">
+                                                <div className="flex gap-2">
+                                                    {user.accountType === 'admin' && (
+                                                        <>
+                                                            <Badge>
+                                                                Agendamento
+                                                            </Badge>
+                                                            <Badge>
+                                                                Logs
+                                                            </Badge>
+                                                            <Badge>
+                                                                Clientes
+                                                            </Badge>
+                                                        </>
+                                                    )}
+                                                    {user.accountType === 'customer' && (
+                                                        <>
+                                                            <Badge>
+                                                                Agendamento
+                                                            </Badge>
+                                                            <Badge>
+                                                                Logs
+                                                            </Badge>
+                                                            <Badge variant='outline'>
+                                                                Clientes
+                                                            </Badge>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                {currentUser?.accountType === 'admin' &&
+                                                    user.accountType === 'customer' &&
+                                                    user.id !== currentUser?.id && (
+                                                        <div className="relative group ml-2">
+                                                            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
+                                                                        onClick={() => {
+                                                                            setUserToPromote(user);
+                                                                            setIsDialogOpen(true);
+                                                                        }}
+                                                                        disabled={updateUserMutation.isPending}
+                                                                    >
+                                                                        <UserCog className="h-3 w-3 text-gray-500" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Promover usuário a Administrador</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Você tem certeza que deseja promover <strong>{user.firstName} {user.lastName}</strong> a Administrador?
+                                                                            <br /><br />
+                                                                            Esta ação irá conceder ao usuário acesso total ao sistema, incluindo:
+                                                                            <ul className="list-disc ml-6 mt-2">
+                                                                                <li>Gerenciamento de clientes</li>
+                                                                                <li>Acesso a logs do sistema</li>
+                                                                                <li>Controle de agendamentos</li>
+                                                                            </ul>
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel onClick={() => {
+                                                                            setUserToPromote(null);
+                                                                            setIsDialogOpen(false);
+                                                                        }}>
+                                                                            Cancelar
+                                                                        </AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={handlePromoteToAdmin}
+                                                                            disabled={updateUserMutation.isPending}
+                                                                        >
+                                                                            {updateUserMutation.isPending ? 'Promovendo...' : 'Confirmar Promoção'}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                                                Promover a Admin
+                                                            </div>
+                                                        </div>
+                                                    )}
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
