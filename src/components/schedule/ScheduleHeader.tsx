@@ -16,6 +16,7 @@ import { useAvailableRooms } from "@/hooks/useRooms";
 import { useCreateSchedule } from "@/hooks/useSchedules";
 import { toast } from "react-toastify";
 import { Room } from "@/types/room";
+import { CreateRoomModal } from "./CreateRoomModal";
 
 export function ScheduleHeader() {
     const { user } = useAuth();
@@ -30,8 +31,9 @@ export function ScheduleHeader() {
     const [selectedTime, setSelectedTime] = useState<string>();
     const [selectedRoom, setSelectedRoom] = useState<string>();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isCreateRoomModalOpen, setIsCreateRoomModalOpen] = useState(false);
 
-    const { data: availableRooms = [] } = useAvailableRooms()
+    const { data: availableRooms = [], refetch: refetchRooms } = useAvailableRooms()
     const createScheduleMutation = useCreateSchedule()
 
     const canCreate = date && selectedTime && selectedRoom
@@ -114,7 +116,7 @@ export function ScheduleHeader() {
             </div>
 
             {isAdmin ? (
-                <Button size="lg">
+                <Button size="lg" onClick={() => setIsCreateRoomModalOpen(true)}>
                     Ajustes de agendamento
                 </Button>
             ) : (
@@ -210,6 +212,14 @@ export function ScheduleHeader() {
                     </DialogContent>
                 </Dialog>
             )}
+
+            <CreateRoomModal
+                isOpen={isCreateRoomModalOpen}
+                onClose={() => setIsCreateRoomModalOpen(false)}
+                onSuccess={() => {
+                    refetchRooms()
+                }}
+            />
         </header>
     )
 }
