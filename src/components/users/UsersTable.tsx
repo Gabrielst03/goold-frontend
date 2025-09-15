@@ -104,7 +104,6 @@ export function UsersTable() {
 
     return (
         <div className="mt-6 border rounded-lg p-6">
-            {/* Header com filtros */}
             <header className="flex items-center justify-between border-b pb-4 mb-6">
                 <div className="flex items-center gap-4">
                     <Input
@@ -189,12 +188,33 @@ export function UsersTable() {
                                         </td>
                                         <td className="px-4 py-4">
                                             <div className="flex gap-2">
-                                                <Badge>
-                                                    Agendamento
-                                                </Badge>
-                                                <Badge>
-                                                    Logs
-                                                </Badge>
+                                                {user.accountType === 'admin' && (
+                                                    <div className='flex gap-2'>
+                                                        <Badge>
+                                                            Agendamento
+                                                        </Badge>
+                                                        <Badge>
+                                                            Logs
+                                                        </Badge>
+                                                        <Badge>
+                                                            Clientes
+                                                        </Badge>
+
+                                                    </div>
+                                                )}
+                                                {user.accountType === 'customer' && (
+                                                    <div className='flex gap-2'>
+                                                        <Badge>
+                                                            Agendamento
+                                                        </Badge>
+                                                        <Badge>
+                                                            Logs
+                                                        </Badge>
+                                                        <Badge variant='outline'>
+                                                            Clientes
+                                                        </Badge>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
