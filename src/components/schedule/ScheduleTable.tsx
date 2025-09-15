@@ -1,6 +1,7 @@
 'use client'
 import { X, Check } from "lucide-react"
 import { Button } from "../ui/button"
+import Image from "next/image"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -101,9 +102,17 @@ export function ScheduleTable() {
 
     if (filteredSchedules.length === 0) {
         return (
-            <div className="mt-6 text-center text-gray-500 py-8">
-                <p>Nenhum agendamento encontrado</p>
-                <p className="text-sm">Crie seu primeiro agendamento usando o botão acima</p>
+            <div className="mt-6 text-center text-gray-500 py-12">
+                <div className="flex flex-col items-center">
+                    <Image
+                        src="/empty.png"
+                        alt="Nenhum agendamento encontrado"
+                        width={128}
+                        height={128}
+                        className="mb-4"
+                    />
+                    <p className="text-lg font-semibold text-black">Nada por aqui ainda...</p>
+                </div>
             </div>
         )
     }
