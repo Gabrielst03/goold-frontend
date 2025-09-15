@@ -28,6 +28,7 @@ export function ScheduleHeader() {
         return dateParam ? new Date(dateParam) : undefined;
     });
     const [name, setName] = useState<string>(searchParams.get('name') || '');
+    const [scheduleDate, setScheduleDate] = useState<Date | undefined>();
     const [selectedTime, setSelectedTime] = useState<string>();
     const [selectedRoom, setSelectedRoom] = useState<string>();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -43,13 +44,13 @@ export function ScheduleHeader() {
         setSelectedTime(undefined)
     }
 
-    const canCreate = date && selectedTime && selectedRoom
+    const canCreate = scheduleDate && selectedTime && selectedRoom
     const isCreating = createScheduleMutation.isPending
 
     const handleCreateSchedule = async () => {
         if (!canCreate) return
 
-        const scheduleDateTime = new Date(date)
+        const scheduleDateTime = new Date(scheduleDate)
         const [hours, minutes] = selectedTime.split(':')
         scheduleDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
@@ -59,7 +60,7 @@ export function ScheduleHeader() {
                 roomId: parseInt(selectedRoom)
             })
 
-            setDate(undefined)
+            setScheduleDate(undefined)
             setSelectedTime(undefined)
             setSelectedRoom(undefined)
             setIsDialogOpen(false)
@@ -92,6 +93,12 @@ export function ScheduleHeader() {
         router.replace(`?${params.toString()}`);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [name, date]);
+
+    const isPastDate = (date: Date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return date < today;
+    };
 
     return (
         <header className="flex items-center justify-between border-b pb-4">
@@ -147,17 +154,17 @@ export function ScheduleHeader() {
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            data-empty={!date}
+                                            data-empty={!scheduleDate}
                                             className="flex items-center justify-between h-11 w-full text-zinc-400"
                                         >
                                             <div>
-                                                {date ? format(date, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
+                                                {scheduleDate ? format(scheduleDate, "PPP", { locale: dateLocale }) : <span>Selecione</span>}
                                             </div>
                                             <CalendarIcon />
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={date} onSelect={setDate} locale={dateLocale} />
+                                        <Calendar mode="single" selected={scheduleDate} onSelect={setScheduleDate} locale={dateLocale} disabled={isPastDate} />
                                     </PopoverContent>
                                 </Popover>
                             </div>
