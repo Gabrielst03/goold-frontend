@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Switch } from "../ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
-import { CalendarIcon, UserCog } from "lucide-react";
+import { CalendarIcon, UserCog, UserX } from "lucide-react";
 import { format } from 'date-fns';
 import { dateLocale } from "@/lib/date-config";
 import { Calendar } from "../ui/calendar";
@@ -29,6 +29,7 @@ export function UsersTable() {
     const [localUserStatus, setLocalUserStatus] = useState<{ [key: number]: boolean }>({});
     const [userToPromote, setUserToPromote] = useState<User | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [actionType, setActionType] = useState<'promote' | 'demote'>('promote');
     const itemsPerPage = 8;
 
     useEffect(() => {
@@ -89,19 +90,21 @@ export function UsersTable() {
         });
     };
 
-    const handlePromoteToAdmin = () => {
+    const handleChangeAccountType = () => {
         if (!userToPromote) return;
+
+        const newAccountType = actionType === 'promote' ? 'admin' : 'customer';
 
         updateUserMutation.mutate({
             id: userToPromote.id,
-            accountType: 'admin'
+            accountType: newAccountType
         }, {
             onSuccess: () => {
                 setUserToPromote(null);
                 setIsDialogOpen(false);
             },
             onError: (error) => {
-                console.error('Erro ao promover usuário:', error);
+                console.error(`Erro ao ${actionType === 'promote' ? 'promover' : 'rebaixar'} usuário:`, error);
                 setIsDialogOpen(false);
             }
         });
@@ -239,37 +242,63 @@ export function UsersTable() {
                                                         </>
                                                     )}
                                                 </div>
-                                                {currentUser?.accountType === 'admin' &&
-                                                    user.accountType === 'customer' &&
-                                                    user.id !== currentUser?.id && (
-                                                        <div className="relative group ml-2">
-                                                            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
-                                                                        onClick={() => {
-                                                                            setUserToPromote(user);
-                                                                            setIsDialogOpen(true);
-                                                                        }}
-                                                                        disabled={updateUserMutation.isPending}
-                                                                    >
-                                                                        <UserCog className="h-3 w-3 text-gray-500" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
+                                                {currentUser?.accountType === 'admin' && 
+                                                 user.id !== currentUser?.id && (
+                                                    <div className="relative group ml-2">
+                                                        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 w-6 p-0 hover:bg-gray-100 rounded-full"
+                                                                    onClick={() => {
+                                                                        setUserToPromote(user);
+                                                                        setActionType(user.accountType === 'customer' ? 'promote' : 'demote');
+                                                                        setIsDialogOpen(true);
+                                                                    }}
+                                                                    disabled={updateUserMutation.isPending}
+                                                                >
+                                                                    {user.accountType === 'customer' ? (
+                                                                        <UserCog className="h-3 w-3 text-green-600" />
+                                                                    ) : (
+                                                                        <UserX className="h-3 w-3 text-red-600" />
+                                                                    )}
+                                                                </Button>
+                                                            </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Promover usuário a Administrador</AlertDialogTitle>
+                                                                        <AlertDialogTitle>
+                                                                            {actionType === 'promote' 
+                                                                                ? 'Promover usuário a Administrador' 
+                                                                                : 'Rebaixar Administrador a Cliente'
+                                                                            }
+                                                                        </AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Você tem certeza que deseja promover <strong>{user.firstName} {user.lastName}</strong> a Administrador?
-                                                                            <br /><br />
-                                                                            Esta ação irá conceder ao usuário acesso total ao sistema, incluindo:
-                                                                            <ul className="list-disc ml-6 mt-2">
-                                                                                <li>Gerenciamento de clientes</li>
-                                                                                <li>Acesso a logs do sistema</li>
-                                                                                <li>Controle de agendamentos</li>
-                                                                            </ul>
+                                                                            {actionType === 'promote' ? (
+                                                                                <>
+                                                                                    Você tem certeza que deseja promover <strong>{userToPromote?.firstName} {userToPromote?.lastName}</strong> a Administrador?
+                                                                                    <br /><br />
+                                                                                    Esta ação irá conceder ao usuário acesso total ao sistema, incluindo:
+                                                                                    <ul className="list-disc ml-6 mt-2">
+                                                                                        <li>Gerenciamento de clientes</li>
+                                                                                        <li>Acesso a logs do sistema</li>
+                                                                                        <li>Controle de agendamentos</li>
+                                                                                    </ul>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    Você tem certeza que deseja rebaixar <strong>{userToPromote?.firstName} {userToPromote?.lastName}</strong> de Administrador para Cliente?
+                                                                                    <br /><br />
+                                                                                    Esta ação irá remover do usuário os seguintes privilégios:
+                                                                                    <ul className="list-disc ml-6 mt-2">
+                                                                                        <li>Gerenciamento de clientes</li>
+                                                                                        <li>Acesso completo a logs do sistema</li>
+                                                                                        <li>Controle total de agendamentos</li>
+                                                                                    </ul>
+                                                                                    <br />
+                                                                                    O usuário manterá apenas acesso básico de cliente.
+                                                                                </>
+                                                                            )}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -280,16 +309,19 @@ export function UsersTable() {
                                                                             Cancelar
                                                                         </AlertDialogCancel>
                                                                         <AlertDialogAction
-                                                                            onClick={handlePromoteToAdmin}
+                                                                            onClick={handleChangeAccountType}
                                                                             disabled={updateUserMutation.isPending}
                                                                         >
-                                                                            {updateUserMutation.isPending ? 'Promovendo...' : 'Confirmar Promoção'}
+                                                                            {updateUserMutation.isPending 
+                                                                                ? (actionType === 'promote' ? 'Promovendo...' : 'Rebaixando...') 
+                                                                                : (actionType === 'promote' ? 'Confirmar Promoção' : 'Confirmar Rebaixamento')
+                                                                            }
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
                                                             </AlertDialog>
                                                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                                Promover a Admin
+                                                                {user.accountType === 'customer' ? 'Promover a Admin' : 'Rebaixar de Admin'}
                                                             </div>
                                                         </div>
                                                     )}
