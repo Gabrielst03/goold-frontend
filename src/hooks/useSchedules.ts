@@ -59,6 +59,17 @@ export function useCreateSchedule() {
         mutationFn: (data: CreateScheduleRequest) => createSchedule(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'paginated'
+            })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'my' &&
+                    query.queryKey[2] === 'paginated'
+            })
         },
     })
 }
@@ -72,6 +83,17 @@ export function useUpdateSchedule() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'paginated'
+            })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'my' &&
+                    query.queryKey[2] === 'paginated'
+            })
         },
     })
 }
@@ -85,6 +107,17 @@ export function useUpdateScheduleStatus() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.detail(id) })
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'paginated'
+            })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'my' &&
+                    query.queryKey[2] === 'paginated'
+            })
         },
     })
 }
@@ -96,6 +129,17 @@ export function useCancelSchedule() {
         mutationFn: (id: number) => cancelSchedule(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'paginated'
+            })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'my' &&
+                    query.queryKey[2] === 'paginated'
+            })
         },
     })
 }
@@ -107,6 +151,17 @@ export function useDeleteSchedule() {
         mutationFn: (id: number) => deleteSchedule(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: scheduleKeys.all })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'paginated'
+            })
+            queryClient.invalidateQueries({
+                predicate: (query) =>
+                    query.queryKey[0] === 'schedules' &&
+                    query.queryKey[1] === 'my' &&
+                    query.queryKey[2] === 'paginated'
+            })
         },
     })
 }

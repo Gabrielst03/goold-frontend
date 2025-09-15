@@ -100,7 +100,7 @@ export function ScheduleTable() {
         )
     }
 
-    if (filteredSchedules.length === 0) {
+    if (filteredSchedules.length <= 0) {
         return (
             <div className="mt-6 text-center text-gray-500 py-12">
                 <div className="flex flex-col items-center">
