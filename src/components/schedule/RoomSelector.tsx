@@ -4,6 +4,7 @@ import { useAvailableRooms } from "@/hooks/useRooms"
 import { RoomCard } from "./RoomCard"
 import { Input } from "../ui/input"
 import { ScrollArea } from "../ui/scroll-area"
+import { Room } from "@/types/room"
 
 interface RoomSelectorProps {
     value?: string
@@ -15,7 +16,7 @@ export function RoomSelector({ value, onSelect, className }: RoomSelectorProps) 
     const [searchTerm, setSearchTerm] = useState("")
     const { data: availableRooms = [], isLoading, error } = useAvailableRooms()
 
-    const filteredRooms = availableRooms.filter(room =>
+    const filteredRooms = availableRooms.filter((room: Room) =>
         room.number.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
@@ -64,7 +65,7 @@ export function RoomSelector({ value, onSelect, className }: RoomSelectorProps) 
 
             <ScrollArea className="h-[300px]">
                 <div className="space-y-2">
-                    {filteredRooms.map((room) => (
+                    {filteredRooms.map((room: Room) => (
                         <RoomCard
                             key={room.id}
                             room={{
