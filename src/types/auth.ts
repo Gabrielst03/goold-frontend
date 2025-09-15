@@ -4,6 +4,7 @@ export interface User {
     lastName: string
     email: string
     accountType: 'customer' | 'admin'
+    status: boolean
     address?: {
         zipCode: string
         street: string

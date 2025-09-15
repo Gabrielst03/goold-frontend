@@ -1,6 +1,8 @@
 'use client'
 
 import { useUsers } from '@/hooks/useUsers';
+import { useUpdateUserStatus } from '@/hooks/useUpdateUserStatus';
+import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/auth';
 import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -16,9 +18,12 @@ import { Pagination } from "../ui/pagination";
 
 export function UsersTable() {
     const { data: users = [], isLoading, error } = useUsers();
+    const { user: currentUser } = useAuth();
+    const updateUserStatusMutation = useUpdateUserStatus();
     const [date, setDate] = useState<string | undefined>(undefined);
     const [name, setName] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [localUserStatus, setLocalUserStatus] = useState<{ [key: number]: boolean }>({});
     const itemsPerPage = 8;
 
     useEffect(() => {
@@ -51,7 +56,17 @@ export function UsersTable() {
     const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const handleUserStatusChange = (userId: number, newStatus: boolean) => {
-        console.log(`Usuário ${userId} ${newStatus ? 'ativado' : 'desativado'}`);
+
+
+        setLocalUserStatus(prev => ({
+            ...prev,
+            [userId]: newStatus
+        }));
+
+        updateUserStatusMutation.mutate({
+            id: userId,
+            isActive: newStatus
+        });
     };
 
     if (isLoading) {
@@ -168,10 +183,19 @@ export function UsersTable() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <Switch
-                                                checked={true}
-                                                onCheckedChange={(checked) => handleUserStatusChange(user.id, checked)}
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <Switch
+                                                    checked={localUserStatus[user.id] ?? user.status ?? true}
+                                                    onCheckedChange={(checked) => handleUserStatusChange(user.id, checked)}
+                                                    disabled={user.id === currentUser?.id}
+                                                />
+                                                {currentUser?.id === user.id && (
+                                                    <span className="text-xs text-gray-500">
+                                                        (Sua conta)
+                                                    </span>
+                                                )}
+
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
